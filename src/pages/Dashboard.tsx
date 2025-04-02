@@ -1,22 +1,45 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Search, Filter, X } from "lucide-react";
 import { toast } from "sonner";
 import { agents } from "@/data/agents";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Agent, AgentConfig } from "@/types/agent";
+import { Agent, AgentConfig, AgentType } from "@/types/agent";
+
+const AGENT_TYPE_LABELS: Record<AgentType, string> = {
+  airflow: "Workflow",
+  kubernetes: "Infrastructure",
+  jenkins: "CI/CD",
+  github: "Version Control",
+  custom: "Custom"
+};
 
 const Dashboard = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [configOpen, setConfigOpen] = useState(false);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<AgentType | "all">("all");
   const navigate = useNavigate();
+  
+  const filteredAgents = useMemo(() => {
+    return agents.filter(agent => {
+      const matchesSearch = 
+        searchQuery === "" || 
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesType = selectedType === "all" || agent.type === selectedType;
+      
+      return matchesSearch && matchesType;
+    });
+  }, [searchQuery, selectedType]);
   
   const handleConfigSave = () => {
     if (!selectedAgent) return;
@@ -73,6 +96,11 @@ const Dashboard = () => {
     }
   };
   
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedType("all");
+  };
+  
   return (
     <div className="container py-8">
       <div className="mb-8">
@@ -82,69 +110,143 @@ const Dashboard = () => {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {agents.map((agent) => (
-          <div 
-            key={agent.id} 
-            className={cn(
-              "agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all", 
-              agent.id !== "airflow" ? "opacity-60 cursor-default" : "cursor-pointer"
-            )} 
-            onClick={() => openAgentConfig(agent)}
-          >
-            <div 
-              className={cn("agent-icon p-4 rounded-full mb-4", 
-                getAgentBackgroundColor(agent.type)
-              )}
-            >
-              <agent.icon size={28} />
+      {/* Search and filter controls */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search agents..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-2 top-2 h-6 w-6"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2 border rounded-md p-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <select 
+                className="bg-transparent text-sm outline-none"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value as AgentType | "all")}
+              >
+                <option value="all">All Types</option>
+                <option value="airflow">Workflow</option>
+                <option value="kubernetes">Infrastructure</option>
+                <option value="jenkins">CI/CD</option>
+                <option value="github">Version Control</option>
+                <option value="custom">Custom</option>
+              </select>
             </div>
-            <h3 className="font-semibold text-lg">{agent.name}</h3>
-            <p className="text-sm text-muted-foreground text-center mt-1">
-              {agent.description}
-            </p>
-            
-            {agent.id !== "airflow" && (
+            {(searchQuery || selectedType !== "all") && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearFilters}
+                className="whitespace-nowrap"
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {filteredAgents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredAgents.map((agent) => (
+            <div 
+              key={agent.id} 
+              className={cn(
+                "agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all", 
+                agent.id !== "airflow" ? "opacity-60 cursor-default" : "cursor-pointer"
+              )} 
+              onClick={() => openAgentConfig(agent)}
+            >
+              <div 
+                className={cn("agent-icon p-4 rounded-full mb-4", 
+                  getAgentBackgroundColor(agent.type)
+                )}
+              >
+                <agent.icon size={28} />
+              </div>
+              <h3 className="font-semibold text-lg">{agent.name}</h3>
+              <div className="text-xs text-muted-foreground mb-2">
+                {AGENT_TYPE_LABELS[agent.type as AgentType]}
+              </div>
+              <p className="text-sm text-muted-foreground text-center mt-1">
+                {agent.description}
+              </p>
+              
+              {agent.id !== "airflow" && (
+                <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
+                  Coming Soon
+                </div>
+              )}
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "mt-4",
+                  agent.id === "airflow" 
+                    ? "opacity-0 group-hover:opacity-100 transition-opacity" 
+                    : "opacity-0"
+                )}
+              >
+                Configure
+              </Button>
+            </div>
+          ))}
+          
+          <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all opacity-60 cursor-default">
+            <CardContent className="flex flex-col items-center justify-center p-6 h-full">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-16 w-16 rounded-full mb-4"
+                disabled
+              >
+                <Plus size={24} />
+              </Button>
+              <h3 className="font-semibold text-lg">Add New Agent</h3>
+              <p className="text-sm text-muted-foreground text-center mt-1">
+                Connect a custom agent
+              </p>
               <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
                 Coming Soon
               </div>
-            )}
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={cn(
-                "mt-4",
-                agent.id === "airflow" 
-                  ? "opacity-0 group-hover:opacity-100 transition-opacity" 
-                  : "opacity-0"
-              )}
-            >
-              Configure
-            </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="bg-slate-100 p-6 rounded-full mb-4">
+            <Search size={32} className="text-slate-400" />
           </div>
-        ))}
-        
-        <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all opacity-60 cursor-default">
-          <CardContent className="flex flex-col items-center justify-center p-6 h-full">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-16 w-16 rounded-full mb-4"
-              disabled
-            >
-              <Plus size={24} />
-            </Button>
-            <h3 className="font-semibold text-lg">Add New Agent</h3>
-            <p className="text-sm text-muted-foreground text-center mt-1">
-              Connect a custom agent
-            </p>
-            <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
-              Coming Soon
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <h3 className="text-xl font-semibold mb-2">No agents found</h3>
+          <p className="text-muted-foreground max-w-md">
+            We couldn't find any agents matching your search criteria. Try adjusting your filters or search term.
+          </p>
+          <Button 
+            variant="outline" 
+            onClick={clearFilters} 
+            className="mt-4"
+          >
+            Clear All Filters
+          </Button>
+        </div>
+      )}
       
       <Dialog open={configOpen} onOpenChange={setConfigOpen}>
         <DialogContent className="sm:max-w-[500px]">
