@@ -1,19 +1,48 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { user, login, loginDemo } = useAuth();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // If user is already logged in, redirect to dashboard
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would authenticate with a backend
-    // For now, just navigate to the dashboard
-    navigate("/");
+    setIsLoading(true);
+    
+    try {
+      await login(formData.email, formData.password);
+    } catch (error) {
+      // Error is handled in the auth context
+      console.error("Login failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = () => {
+    loginDemo();
   };
 
   return (
@@ -39,11 +68,27 @@ const LoginPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="Enter your email" required />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  value={formData.email}
+                  onChange={handleChange}
+                  required 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Enter your password" required />
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  placeholder="Enter your password" 
+                  value={formData.password}
+                  onChange={handleChange}
+                  required 
+                />
               </div>
               <div className="flex justify-between items-center text-sm">
                 <a href="#" className="text-primary hover:underline">
@@ -54,8 +99,13 @@ const LoginPage = () => {
                 </Button>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full">Sign In</Button>
+            <CardFooter className="flex-col space-y-2">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                For testing, use email: user@example.com / password: password
+              </p>
             </CardFooter>
           </form>
         </Card>
@@ -64,9 +114,9 @@ const LoginPage = () => {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate("/")}
+            onClick={handleDemoLogin}
           >
-            Continue with SSO
+            Continue with Demo Account
           </Button>
         </div>
       </div>

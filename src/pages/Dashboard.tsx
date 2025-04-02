@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +10,8 @@ import { agents } from "@/data/agents";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Agent, AgentConfig, AgentType } from "@/types/agent";
+import AgentOnboarding from "@/components/AgentOnboarding";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AGENT_TYPE_LABELS: Record<AgentType, string> = {
   airflow: "Workflow",
@@ -23,10 +24,14 @@ const AGENT_TYPE_LABELS: Record<AgentType, string> = {
 const Dashboard = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [configOpen, setConfigOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<AgentType | "all">("all");
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const activeAgentIds = useMemo(() => ["airflow"], []);
   
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
@@ -68,15 +73,18 @@ const Dashboard = () => {
   };
   
   const openAgentConfig = (agent: Agent) => {
-    // Only allow configuring Airflow agent
     if (agent.id !== "airflow") {
       toast.info("This agent is coming soon!");
       return;
     }
     
     setSelectedAgent(agent);
-    setConfigValues({});
-    setConfigOpen(true);
+    
+    if (activeAgentIds.includes(agent.id)) {
+      navigate(`/chat?agent=${agent.id}`);
+    } else {
+      setOnboardingOpen(true);
+    }
   };
   
   const getAgentBackgroundColor = (type: string) => {
@@ -108,9 +116,13 @@ const Dashboard = () => {
         <p className="text-muted-foreground mt-1">
           Configure and chat with your agents
         </p>
+        {user?.isDemo && (
+          <div className="mt-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-md text-sm">
+            You're using a demo account. Some features may be limited.
+          </div>
+        )}
       </div>
       
-      {/* Search and filter controls */}
       <div className="mb-8 space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
@@ -188,9 +200,18 @@ const Dashboard = () => {
                 {agent.description}
               </p>
               
-              {agent.id !== "airflow" && (
+              {agent.id !== "airflow" ? (
                 <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
                   Coming Soon
+                </div>
+              ) : activeAgentIds.includes(agent.id) ? (
+                <div className="mt-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                  Active
+                </div>
+              ) : (
+                <div className="mt-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                  Available
                 </div>
               )}
               
@@ -204,7 +225,7 @@ const Dashboard = () => {
                     : "opacity-0"
                 )}
               >
-                Configure
+                {activeAgentIds.includes(agent.id) ? "Open Chat" : "Configure"}
               </Button>
             </div>
           ))}
@@ -300,6 +321,14 @@ const Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {selectedAgent && (
+        <AgentOnboarding 
+          agentId={selectedAgent.id}
+          open={onboardingOpen}
+          onOpenChange={setOnboardingOpen}
+        />
+      )}
     </div>
   );
 };
