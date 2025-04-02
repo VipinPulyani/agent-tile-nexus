@@ -1,5 +1,4 @@
-
-import { Wind, Cpu, GitBranch, Github, Server } from "lucide-react";
+import { Wind, Cpu, GitBranch, Github, Server, CloudCog, Database } from "lucide-react";
 import { Agent, AgentType } from "@/types/agent";
 
 export const agents: Agent[] = [
@@ -39,7 +38,7 @@ export const agents: Agent[] = [
     name: "Kubernetes",
     type: "kubernetes",
     description: "K8s cluster management",
-    icon: Cpu,
+    icon: CloudCog,
     configured: false,
     configFields: [
       {
@@ -118,7 +117,7 @@ export const agents: Agent[] = [
     name: "Custom Agent",
     type: "custom",
     description: "Connect to your custom service",
-    icon: Server,
+    icon: Database,
     configured: false,
     configFields: [
       {

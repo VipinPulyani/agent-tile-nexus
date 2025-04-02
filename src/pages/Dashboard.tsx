@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,6 @@ const Dashboard = () => {
   const handleConfigSave = () => {
     if (!selectedAgent) return;
     
-    // Validate required fields
     const missingFields = selectedAgent.configFields
       .filter(field => field.required && !configValues[field.id])
       .map(field => field.label);
@@ -31,21 +29,17 @@ const Dashboard = () => {
       return;
     }
     
-    // Save configuration
     const config: AgentConfig = {
       agentId: selectedAgent.id,
       values: configValues
     };
     
-    // In a real app, you would save this to a store or backend
     console.log("Saving agent configuration:", config);
     
-    // Show success and close dialog
     toast.success(`${selectedAgent.name} configured successfully!`);
     setConfigOpen(false);
     setConfigValues({});
     
-    // Navigate to chat with this agent
     navigate(`/chat?agent=${selectedAgent.id}`);
   };
   
@@ -53,6 +47,23 @@ const Dashboard = () => {
     setSelectedAgent(agent);
     setConfigValues({});
     setConfigOpen(true);
+  };
+  
+  const getAgentBackgroundColor = (type: string) => {
+    switch (type) {
+      case "airflow":
+        return "bg-blue-100 text-blue-600";
+      case "kubernetes":
+        return "bg-indigo-100 text-indigo-600";
+      case "jenkins":
+        return "bg-orange-100 text-orange-600";
+      case "github":
+        return "bg-gray-100 text-gray-600";
+      case "custom":
+        return "bg-purple-100 text-purple-600";
+      default:
+        return "bg-slate-100 text-slate-600";
+    }
   };
   
   return (
@@ -66,12 +77,10 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {agents.map((agent) => (
-          <div key={agent.id} className="agent-tile" onClick={() => openAgentConfig(agent)}>
+          <div key={agent.id} className="agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer" onClick={() => openAgentConfig(agent)}>
             <div 
-              className={cn("agent-icon", 
-                agent.type === "airflow" && "bg-agent-airflow",
-                agent.type === "kubernetes" && "bg-agent-kubernetes",
-                agent.type !== "airflow" && agent.type !== "kubernetes" && "bg-agent-default"
+              className={cn("agent-icon p-4 rounded-full mb-4", 
+                getAgentBackgroundColor(agent.type)
               )}
             >
               <agent.icon size={28} />
@@ -83,14 +92,14 @@ const Dashboard = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="mt-4"
+              className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               Configure
             </Button>
           </div>
         ))}
         
-        <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all">
+        <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all cursor-pointer">
           <CardContent className="flex flex-col items-center justify-center p-6 h-full">
             <Button 
               variant="outline" 
@@ -107,7 +116,6 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      {/* Agent Configuration Dialog */}
       <Dialog open={configOpen} onOpenChange={setConfigOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -116,12 +124,10 @@ const Dashboard = () => {
                 <>
                   <span 
                     className={cn("inline-flex p-2 rounded-full", 
-                      selectedAgent.type === "airflow" && "bg-agent-airflow",
-                      selectedAgent.type === "kubernetes" && "bg-agent-kubernetes",
-                      selectedAgent.type !== "airflow" && selectedAgent.type !== "kubernetes" && "bg-agent-default"
+                      getAgentBackgroundColor(selectedAgent.type)
                     )}
                   >
-                    {selectedAgent.icon && <selectedAgent.icon className="text-white" size={18} />}
+                    {selectedAgent.icon && <selectedAgent.icon className="h-5 w-5" />}
                   </span>
                   {selectedAgent.name} Configuration
                 </>
