@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
-import Dashboard from "./pages/Dashboard";
+import Onboarding from "./pages/Dashboard"; // Keep using the Dashboard component but rename it
 import ChatPage from "./pages/ChatPage";
 import ConfigurationPage from "./pages/ConfigurationPage";
 import LoginPage from "./pages/LoginPage";
@@ -35,7 +35,7 @@ const App = () => (
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="/" element={<>
                     <OnboardingTour />
-                    <Dashboard />
+                    <Onboarding />
                   </>} />
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/configuration" element={<ConfigurationPage />} />

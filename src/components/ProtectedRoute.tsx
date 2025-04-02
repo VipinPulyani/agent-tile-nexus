@@ -10,12 +10,20 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   useEffect(() => {
     if (user) {
-      // Add a login notification
-      addNotification({
-        title: "Welcome Back",
-        message: `Hello ${user.name}, you've successfully logged in.`,
-        category: "system_alert"
-      });
+      // Check localStorage to see if welcome message was already shown
+      const welcomeShown = localStorage.getItem(`welcome_shown_${user.id}`);
+      
+      if (!welcomeShown) {
+        // Add a login notification only if not shown before
+        addNotification({
+          title: "Welcome Back",
+          message: `Hello ${user.name}, you've successfully logged in.`,
+          category: "system_alert"
+        });
+        
+        // Set flag in localStorage to prevent showing again in this session
+        localStorage.setItem(`welcome_shown_${user.id}`, "true");
+      }
     }
   }, [user, addNotification]);
   
