@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Sidebar, 
@@ -17,13 +17,20 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
+import { useNotifications } from "@/contexts/NotificationsContext";
 
 const AppSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { state } = useSidebar();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const collapsed = state === "collapsed";
+
+  const isActivePath = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
     <Sidebar className="border-r border-sidebar-border">
@@ -50,16 +57,18 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/")} 
-              className="w-full justify-start gap-2"
+              className={cn("w-full justify-start gap-2", isActivePath("/") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/")}
             >
               <Settings size={20} />
-              {!collapsed && <span>Dashboard</span>}
+              {!collapsed && <span>Onboarding</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/chat")} 
-              className="w-full justify-start gap-2"
+              className={cn("w-full justify-start gap-2", isActivePath("/chat") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/chat")}
             >
               <MessageSquare size={20} />
               {!collapsed && <span>Chat</span>}
@@ -68,7 +77,8 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/configuration")}
-              className="w-full justify-start gap-2"
+              className={cn("w-full justify-start gap-2", isActivePath("/configuration") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/configuration")}
             >
               <Settings size={20} />
               {!collapsed && <span>Configuration</span>}
@@ -77,7 +87,8 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/profile")}
-              className="w-full justify-start gap-2"
+              className={cn("w-full justify-start gap-2", isActivePath("/profile") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/profile")}
             >
               <User size={20} />
               {!collapsed && <span>Profile</span>}
@@ -87,11 +98,17 @@ const AppSidebar = () => {
           {/* Notifications */}
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="w-full justify-start gap-2 relative"
+              onClick={() => navigate("/notifications")}
+              className={cn("w-full justify-start gap-2 relative", isActivePath("/notifications") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/notifications")}
             >
               <Bell size={20} />
               {!collapsed && <span>Notifications</span>}
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">2</Badge>
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Badge>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
