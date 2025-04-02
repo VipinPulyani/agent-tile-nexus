@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +45,12 @@ const Dashboard = () => {
   };
   
   const openAgentConfig = (agent: Agent) => {
+    // Only allow configuring Airflow agent
+    if (agent.id !== "airflow") {
+      toast.info("This agent is coming soon!");
+      return;
+    }
+    
     setSelectedAgent(agent);
     setConfigValues({});
     setConfigOpen(true);
@@ -77,7 +84,14 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {agents.map((agent) => (
-          <div key={agent.id} className="agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer" onClick={() => openAgentConfig(agent)}>
+          <div 
+            key={agent.id} 
+            className={cn(
+              "agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all", 
+              agent.id !== "airflow" ? "opacity-60 cursor-default" : "cursor-pointer"
+            )} 
+            onClick={() => openAgentConfig(agent)}
+          >
             <div 
               className={cn("agent-icon p-4 rounded-full mb-4", 
                 getAgentBackgroundColor(agent.type)
@@ -89,22 +103,35 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground text-center mt-1">
               {agent.description}
             </p>
+            
+            {agent.id !== "airflow" && (
+              <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
+                Coming Soon
+              </div>
+            )}
+            
             <Button 
               variant="ghost" 
               size="sm" 
-              className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity"
+              className={cn(
+                "mt-4",
+                agent.id === "airflow" 
+                  ? "opacity-0 group-hover:opacity-100 transition-opacity" 
+                  : "opacity-0"
+              )}
             >
               Configure
             </Button>
           </div>
         ))}
         
-        <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all cursor-pointer">
+        <Card className="border-dashed border-2 border-border hover:border-primary/50 transition-all opacity-60 cursor-default">
           <CardContent className="flex flex-col items-center justify-center p-6 h-full">
             <Button 
               variant="outline" 
               size="icon" 
               className="h-16 w-16 rounded-full mb-4"
+              disabled
             >
               <Plus size={24} />
             </Button>
@@ -112,6 +139,9 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground text-center mt-1">
               Connect a custom agent
             </p>
+            <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
+              Coming Soon
+            </div>
           </CardContent>
         </Card>
       </div>
