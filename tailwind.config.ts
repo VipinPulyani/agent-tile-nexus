@@ -66,7 +66,9 @@ export default {
 				agent: {
 					airflow: '#017cee',
 					kubernetes: '#326ce5',
-					default: '#6366f1'
+					default: '#6366f1',
+					langchain: '#22c55e', // Added vibrant green for LangChain
+					langgraph: '#f97316' // Added vibrant orange for LangGraph
 				}
 			},
 			borderRadius: {
@@ -94,12 +96,27 @@ export default {
 				'pulse-subtle': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-500px 0' },
+					'100%': { backgroundPosition: '500px 0' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'float': 'float 3s ease-in-out infinite',
+				'shimmer': 'shimmer 2s linear infinite'
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+				'gradient-vibrant': 'linear-gradient(to right, #f97316, #8b5cf6, #0ea5e9)'
 			}
 		}
 	},
