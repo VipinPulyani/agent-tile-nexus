@@ -9,17 +9,20 @@ import {
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem,
-  SidebarFooter
+  SidebarFooter,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { MessageSquare, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AppSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsed={collapsed} className="border-r border-sidebar-border">
+    <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="p-4 flex justify-between items-center">
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
           {!collapsed && (
@@ -31,7 +34,7 @@ const AppSidebar = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => setCollapsed(!collapsed)} 
+          onClick={() => setIsCollapsed(!isCollapsed)} 
           className="text-sidebar-foreground"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
