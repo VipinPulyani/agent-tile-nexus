@@ -18,7 +18,9 @@ const AGENT_TYPE_LABELS: Record<AgentType, string> = {
   kubernetes: "Infrastructure",
   jenkins: "CI/CD",
   github: "Version Control",
-  custom: "Custom"
+  custom: "Custom",
+  langchain: "LLM Chain",
+  langgraph: "LLM Graph"
 };
 
 const Dashboard = () => {
@@ -99,6 +101,10 @@ const Dashboard = () => {
         return "bg-gray-100 text-gray-600";
       case "custom":
         return "bg-purple-100 text-purple-600";
+      case "langchain":
+        return "bg-green-100 text-green-600";
+      case "langgraph":
+        return "bg-yellow-100 text-yellow-600";
       default:
         return "bg-slate-100 text-slate-600";
     }
@@ -158,6 +164,8 @@ const Dashboard = () => {
                 <option value="jenkins">CI/CD</option>
                 <option value="github">Version Control</option>
                 <option value="custom">Custom</option>
+                <option value="langchain">LLM Chain</option>
+                <option value="langgraph">LLM Graph</option>
               </select>
             </div>
             {(searchQuery || selectedType !== "all") && (
