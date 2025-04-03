@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Filter, X } from "lucide-react";
+import { Plus, Search, Filter, X, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { agents } from "@/data/agents";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const activeAgentIds = useMemo(() => ["airflow"], []);
+  const activeAgentIds = useMemo(() => [], []);
   
   const filteredAgents = useMemo(() => {
     return agents.filter(agent => {
@@ -71,21 +71,17 @@ const Dashboard = () => {
     setConfigOpen(false);
     setConfigValues({});
     
+    activeAgentIds.push(selectedAgent.id);
     navigate(`/chat?agent=${selectedAgent.id}`);
   };
   
   const openAgentConfig = (agent: Agent) => {
-    if (agent.id !== "airflow") {
-      toast.info("This agent is coming soon!");
-      return;
-    }
-    
     setSelectedAgent(agent);
     
     if (activeAgentIds.includes(agent.id)) {
       navigate(`/chat?agent=${agent.id}`);
     } else {
-      setOnboardingOpen(true);
+      setConfigOpen(true);
     }
   };
   
@@ -187,10 +183,7 @@ const Dashboard = () => {
           {filteredAgents.map((agent) => (
             <div 
               key={agent.id} 
-              className={cn(
-                "agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all", 
-                agent.id !== "airflow" ? "opacity-60 cursor-default" : "cursor-pointer"
-              )} 
+              className="agent-tile group flex flex-col items-center justify-center p-6 rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer"
               onClick={() => openAgentConfig(agent)}
             >
               <div 
@@ -208,11 +201,7 @@ const Dashboard = () => {
                 {agent.description}
               </p>
               
-              {agent.id !== "airflow" ? (
-                <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
-                  Coming Soon
-                </div>
-              ) : activeAgentIds.includes(agent.id) ? (
+              {activeAgentIds.includes(agent.id) ? (
                 <div className="mt-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
                   <span className="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
                   Active
@@ -226,12 +215,7 @@ const Dashboard = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={cn(
-                  "mt-4",
-                  agent.id === "airflow" 
-                    ? "opacity-0 group-hover:opacity-100 transition-opacity" 
-                    : "opacity-0"
-                )}
+                className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 {activeAgentIds.includes(agent.id) ? "Open Chat" : "Configure"}
               </Button>

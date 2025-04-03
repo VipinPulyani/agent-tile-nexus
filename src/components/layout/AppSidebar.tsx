@@ -20,10 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/contexts/NotificationsContext";
 
 const AppSidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const collapsed = state === "collapsed";
@@ -32,12 +31,16 @@ const AppSidebar = () => {
     return location.pathname === path;
   };
 
+  const toggleSidebar = () => {
+    setOpen(prev => !prev);
+  };
+
   return (
     <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="p-4 flex justify-between items-center">
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
           {!collapsed && (
-            <span className="font-bold text-xl bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            <span className="font-bold text-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 bg-clip-text text-transparent animate-shimmer">
               AgentHub
             </span>
           )}
@@ -45,7 +48,7 @@ const AppSidebar = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => setIsCollapsed(!isCollapsed)} 
+          onClick={toggleSidebar} 
           className="text-sidebar-foreground"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -54,16 +57,7 @@ const AppSidebar = () => {
       
       <SidebarContent className="px-2">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => navigate("/")} 
-              className={cn("w-full justify-start gap-2", isActivePath("/") && "bg-sidebar-accent text-sidebar-accent-foreground")}
-              isActive={isActivePath("/")}
-            >
-              <Settings size={20} />
-              {!collapsed && <span>Onboarding</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Chat now comes first */}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/chat")} 
@@ -74,6 +68,20 @@ const AppSidebar = () => {
               {!collapsed && <span>Chat</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
+          
+          {/* Onboarding renamed to Dashboard */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => navigate("/")} 
+              className={cn("w-full justify-start gap-2", isActivePath("/") && "bg-sidebar-accent text-sidebar-accent-foreground")}
+              isActive={isActivePath("/")}
+            >
+              <Settings size={20} />
+              {!collapsed && <span>Dashboard</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          {/* Configuration renamed to Settings */}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/configuration")}
@@ -81,9 +89,15 @@ const AppSidebar = () => {
               isActive={isActivePath("/configuration")}
             >
               <Settings size={20} />
-              {!collapsed && <span>Configuration</span>}
+              {!collapsed && <span>Settings</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+      
+      <SidebarFooter className="p-4 flex flex-col gap-2">
+        {/* Bottom sidebar section with profile and notifications */}
+        <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/profile")}
@@ -95,7 +109,6 @@ const AppSidebar = () => {
             </SidebarMenuButton>
           </SidebarMenuItem>
           
-          {/* Notifications */}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => navigate("/notifications")}
@@ -112,9 +125,7 @@ const AppSidebar = () => {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarContent>
-      
-      <SidebarFooter className="p-4 flex flex-col gap-2">
+        
         <ThemeToggle />
         
         <Button 

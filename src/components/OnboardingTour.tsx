@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, ChevronRight, ChevronLeft, MessageSquare, Settings, Bell, User } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,8 +23,8 @@ const OnboardingTour = () => {
       icon: <Settings size={40} className="text-primary" />
     },
     {
-      title: "Onboarding Dashboard",
-      description: "The Onboarding Dashboard is your central hub where you can configure and activate your AI agents. Each agent serves different purposes, from workflow automation to infrastructure management.",
+      title: "Dashboard",
+      description: "The Dashboard is your central hub where you can configure and activate your AI agents. Each agent serves different purposes, from workflow automation to infrastructure management.",
       icon: <Settings size={40} className="text-blue-500" />
     },
     {
@@ -87,7 +86,7 @@ const OnboardingTour = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] mx-auto w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-center mb-4">
             {steps[currentStep].icon}
