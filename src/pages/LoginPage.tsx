@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const LoginPage = () => {
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // If user is already logged in, redirect to dashboard
   if (user) {
@@ -25,16 +27,20 @@ const LoginPage = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errorMessage) setErrorMessage("");
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
     
     try {
       await login(formData.email, formData.password);
     } catch (error) {
-      // Error is handled in the auth context
+      const errorMsg = error instanceof Error ? error.message : "Login failed. Please check your credentials.";
+      setErrorMessage(errorMsg);
       console.error("Login failed:", error);
     } finally {
       setIsLoading(false);
@@ -42,6 +48,7 @@ const LoginPage = () => {
   };
 
   const handleDemoLogin = () => {
+    setErrorMessage("");
     loginDemo();
   };
 
@@ -49,7 +56,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-muted/30">
       <div className="w-full max-w-md p-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent animate-shimmer">
             AgentHub
           </h1>
           <p className="text-muted-foreground">
@@ -57,7 +64,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        <Card>
+        <Card className="border border-primary/20 shadow-lg animate-float backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>
@@ -76,6 +83,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required 
+                  className={errorMessage ? "border-red-500" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -88,8 +96,14 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required 
+                  className={errorMessage ? "border-red-500" : ""}
                 />
               </div>
+              {errorMessage && (
+                <div className="text-sm font-medium text-red-500 py-2 px-3 bg-red-50 rounded">
+                  {errorMessage}
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm">
                 <a href="#" className="text-primary hover:underline">
                   Forgot password?
@@ -101,7 +115,12 @@ const LoginPage = () => {
             </CardContent>
             <CardFooter className="flex-col space-y-2">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : "Sign In"}
               </Button>
               <p className="text-center text-sm text-muted-foreground mt-2">
                 For testing, use email: user@example.com / password: password
@@ -113,7 +132,7 @@ const LoginPage = () => {
         <div className="mt-6">
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full hover:bg-primary/10 transition-colors"
             onClick={handleDemoLogin}
           >
             Continue with Demo Account
