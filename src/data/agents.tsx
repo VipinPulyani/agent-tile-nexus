@@ -1,6 +1,6 @@
 
 import { AgentType, Agent, ConfigField } from "@/types/agent";
-import { Wind, Server, Tool, Github, Puzzle, Zap, NetworkIcon } from "lucide-react";
+import { Wind, Server, Wrench, Github, Puzzle, Zap, NetworkIcon } from "lucide-react";
 
 export const agentIcons: Record<AgentType, string> = {
   langchain: "⚡",
@@ -93,7 +93,7 @@ export const agents: Agent[] = [
     name: "Jenkins Assistant",
     type: "jenkins",
     description: "Automate build and deployment processes",
-    icon: Tool,
+    icon: Wrench,
     configured: false,
     configFields: defaultConfigFields
   },
