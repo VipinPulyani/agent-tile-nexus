@@ -14,7 +14,6 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginDemo: () => void;
   logout: () => void;
   updateUserProfile: (data: Partial<User>) => void;
 }
@@ -64,13 +63,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // For demo purposes we'll still allow the hardcoded login
-      if (email === "user@example.com" && password === "password") {
+      // For demo purposes we'll handle the hardcoded accounts
+      if ((email === "user@example.com" && password === "password") || 
+          (email === "demo@demo.com" && password === "demo")) {
+        
         const demoUser = {
-          id: "1",
-          email: "user@example.com",
-          name: "Regular User",
+          id: email === "demo@demo.com" ? "demo1" : "1",
+          email: email,
+          name: email === "demo@demo.com" ? "Demo User" : "Regular User",
         };
+        
         setUser(demoUser);
         localStorage.setItem("user", JSON.stringify(demoUser));
         localStorage.setItem("token", "demo-token"); // Fake token
@@ -130,22 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginDemo = () => {
-    setLoading(true);
-    const demoUser = {
-      id: "demo1",
-      email: "demo@example.com",
-      name: "Demo User",
-      isDemo: true,
-    };
-    setUser(demoUser);
-    localStorage.setItem("user", JSON.stringify(demoUser));
-    localStorage.setItem("token", "demo-token"); // Fake token for demo
-    toast.success("Demo login successful!");
-    navigate("/");
-    setLoading(false);
-  };
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -169,7 +155,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         login,
-        loginDemo,
         logout,
         updateUserProfile,
       }}

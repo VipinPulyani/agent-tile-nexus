@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { user, login, loginDemo } = useAuth();
+  const { user, login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -45,11 +45,6 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    setErrorMessage("");
-    loginDemo();
   };
 
   return (
@@ -108,9 +103,6 @@ const LoginPage = () => {
                 <a href="#" className="text-primary hover:underline">
                   Forgot password?
                 </a>
-                <Button variant="link" className="p-0 h-auto" type="button">
-                  Sign up
-                </Button>
               </div>
             </CardContent>
             <CardFooter className="flex-col space-y-2">
@@ -123,21 +115,11 @@ const LoginPage = () => {
                 ) : "Sign In"}
               </Button>
               <p className="text-center text-sm text-muted-foreground mt-2">
-                For testing, use email: user@example.com / password: password
+                For testing, use email: demo@demo.com / password: demo
               </p>
             </CardFooter>
           </form>
         </Card>
-
-        <div className="mt-6">
-          <Button 
-            variant="outline" 
-            className="w-full hover:bg-primary/10 transition-colors"
-            onClick={handleDemoLogin}
-          >
-            Continue with Demo Account
-          </Button>
-        </div>
       </div>
     </div>
   );
