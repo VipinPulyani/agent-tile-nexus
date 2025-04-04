@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { agents } from "@/data/agents";
 import { Send, Plus, Paperclip, Smile, MoreVertical, User, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AgentType } from "@/types/agent";
 
 interface Message {
   id: string;
@@ -123,10 +124,7 @@ const ChatPage = () => {
                 className={cn("inline-flex p-2 rounded-full", 
                   agent.type === "airflow" && "bg-agent-airflow",
                   agent.type === "kubernetes" && "bg-agent-kubernetes",
-                  agent.type === "langchain" && "bg-agent-langchain",
-                  agent.type === "langgraph" && "bg-agent-langgraph",
-                  agent.type !== "airflow" && agent.type !== "kubernetes" && 
-                  agent.type !== "langchain" && agent.type !== "langgraph" && "bg-agent-default"
+                  agent.type !== "airflow" && agent.type !== "kubernetes" && "bg-agent-default"
                 )}
               >
                 {agent.icon && <agent.icon className="text-white" size={18} />}

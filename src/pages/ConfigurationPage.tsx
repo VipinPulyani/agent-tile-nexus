@@ -172,44 +172,6 @@ const ConfigurationPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Database Information</CardTitle>
-            <CardDescription>
-              Storage of agent configurations
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p>
-              Currently, agent configurations are stored in your browser's localStorage. 
-              This is a temporary solution for demonstration purposes.
-            </p>
-            
-            <p>
-              In a production environment, you would want to store this information in a database:
-            </p>
-            
-            <ul className="list-disc pl-5 space-y-2">
-              <li>
-                <strong>User-specific configurations:</strong> Each user can have their own configuration for each agent.
-              </li>
-              <li>
-                <strong>Secure credential storage:</strong> Sensitive information like API keys and passwords should be encrypted.
-              </li>
-              <li>
-                <strong>Cross-device access:</strong> Users can access their configurations from any device.
-              </li>
-            </ul>
-            
-            <p className="text-sm text-muted-foreground mt-2">
-              For a complete solution, we recommend implementing a backend database like PostgreSQL, 
-              MongoDB, or using a managed service like Supabase or Firebase.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

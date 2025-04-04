@@ -212,7 +212,8 @@ const Dashboard = () => {
                   Active
                 </div>
               ) : (
-                <div className="mt-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                <div className="mt-2 px-3 py-1 rounded-full text-xs font-medium 
+                  {agent.id === 'airflow' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-700'}">
                   {agent.id === "airflow" ? "Available" : "Coming Soon"}
                 </div>
               )}
@@ -242,7 +243,7 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground text-center mt-1">
                 Connect a custom agent
               </p>
-              <div className="mt-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
+              <div className="mt-2 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-medium">
                 Coming Soon
               </div>
             </CardContent>
