@@ -11,7 +11,7 @@ export interface Agent {
   icon: LucideIcon;
   configured: boolean;
   configFields: ConfigField[];
-  status?: 'active' | 'inactive' | 'configuring';
+  status?: 'active' | 'inactive' | 'configuring' | 'coming_soon';
 }
 
 export interface ConfigField {

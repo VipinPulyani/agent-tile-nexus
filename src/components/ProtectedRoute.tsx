@@ -10,22 +10,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   useEffect(() => {
     if (user) {
-      // Check localStorage to see if welcome message was already shown
-      const welcomeShown = localStorage.getItem(`welcome_shown_${user.id}`);
+      // Check sessionStorage (not localStorage) to ensure welcome message shows once per session
+      const welcomeShown = sessionStorage.getItem(`welcome_shown_${user.id}`);
       
       if (!welcomeShown) {
-        // Add a login notification only if not shown before
+        // Add a login notification only if not shown before in this session
         addNotification({
           title: "Welcome Back",
           message: `Hello ${user.name}, you've successfully logged in.`,
           category: "system_alert"
         });
         
-        // Set flag in localStorage to prevent showing again in this session
-        localStorage.setItem(`welcome_shown_${user.id}`, "true");
+        // Set flag in sessionStorage to prevent showing again in this session
+        sessionStorage.setItem(`welcome_shown_${user.id}`, "true");
       }
     }
-  }, [user, addNotification]);
+    // Only run this effect once when the component mounts and when user changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
   
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -39,3 +41,4 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 export default ProtectedRoute;
+
