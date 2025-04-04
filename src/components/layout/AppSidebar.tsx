@@ -23,8 +23,8 @@ const AppSidebar = () => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { name: "Chat", icon: MessageSquare, path: "/chat" },
     { name: "Onboarding", icon: Home, path: "/" },
+    { name: "Chat", icon: MessageSquare, path: "/chat" },
     { name: "Settings", icon: Settings, path: "/configuration" },
     { name: "Profile", icon: User, path: "/profile" },
     { name: "Notifications", icon: Bell, path: "/notifications" },
@@ -41,10 +41,10 @@ const AppSidebar = () => {
 
   return (
     <div className={cn(
-      "flex flex-col h-screen bg-background border-r transition-all duration-300",
+      "flex flex-col h-screen bg-sidebar transition-all duration-300",
       collapsed ? "w-16" : "w-64"
     )}>
-      <div className="p-4 flex justify-between items-center border-b">
+      <div className="p-4 flex justify-between items-center border-b border-sidebar-border">
         {!collapsed && (
           <h1 className="font-bold text-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
             AgentHub
@@ -54,7 +54,7 @@ const AppSidebar = () => {
           variant="ghost" 
           size="icon" 
           onClick={toggleSidebar}
-          className={cn("ml-auto", collapsed ? "mx-auto" : "")}
+          className={cn("ml-auto text-sidebar-foreground", collapsed ? "mx-auto" : "")}
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
@@ -67,7 +67,7 @@ const AppSidebar = () => {
               <Button
                 variant={location.pathname === item.path ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start",
+                  "w-full justify-start text-sidebar-foreground",
                   collapsed ? "justify-center px-2" : ""
                 )}
                 onClick={() => navigate(item.path)}
@@ -80,31 +80,28 @@ const AppSidebar = () => {
         </ul>
       </div>
       
-      <div className="border-t p-4">
-        {!collapsed && <ThemeToggle />}
-        
-        <div className="mt-4">
+      <div className="border-t border-sidebar-border p-4">
+        <div className="flex items-center justify-between">
+          <ThemeToggle />
+          
           <Button
             variant="ghost"
-            className={cn(
-              "w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20",
-              collapsed ? "justify-center px-2" : ""
-            )}
+            size="icon"
+            className="text-sidebar-foreground hover:text-destructive hover:bg-destructive/10"
             onClick={handleLogout}
           >
-            <LogOut className={cn("h-5 w-5", collapsed ? "mr-0" : "mr-2")} />
-            {!collapsed && <span>Logout</span>}
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
-        
+
         {!collapsed && (
           <div className="mt-4 flex items-center">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
               <User className="h-4 w-4 text-primary" />
             </div>
             <div className="ml-2">
-              <p className="text-sm font-medium">{user?.name || "User"}</p>
-              <p className="text-xs text-muted-foreground">{user?.email || "user@example.com"}</p>
+              <p className="text-sm font-medium text-sidebar-foreground">{user?.name || "User"}</p>
+              <p className="text-xs text-sidebar-foreground/70">{user?.email || "user@example.com"}</p>
             </div>
           </div>
         )}
