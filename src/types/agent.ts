@@ -1,7 +1,7 @@
 
 import { LucideIcon } from "lucide-react";
 
-export type AgentType = 'airflow' | 'kubernetes' | 'jenkins' | 'github' | 'custom' | 'langchain' | 'langgraph';
+export type AgentType = 'airflow' | 'kubernetes' | 'jenkins' | 'github' | 'custom';
 
 export interface Agent {
   id: string;
