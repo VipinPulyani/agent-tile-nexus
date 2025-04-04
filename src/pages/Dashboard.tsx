@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,6 +68,9 @@ const Dashboard = () => {
     
     console.log("Saving agent configuration:", config);
     
+    // In a real app, we would save this to localStorage or a backend
+    localStorage.setItem(`agent_config_${user?.id}_${selectedAgent.id}`, JSON.stringify(config));
+    
     toast.success(`${selectedAgent.name} configured successfully!`);
     setConfigOpen(false);
     setConfigValues({});
@@ -78,11 +82,20 @@ const Dashboard = () => {
   const openAgentConfig = (agent: Agent) => {
     setSelectedAgent(agent);
     
-    if (activeAgentIds.includes(agent.id)) {
-      navigate(`/chat?agent=${agent.id}`);
-    } else {
-      setConfigOpen(true);
+    // Check if this agent is not Airflow, and if so, show a "Coming Soon" message
+    if (agent.id !== "airflow") {
+      toast.info(`${agent.name} is coming soon!`);
+      return;
     }
+    
+    // Try to load existing config for this agent and user
+    const savedConfig = localStorage.getItem(`agent_config_${user?.id}_${agent.id}`);
+    if (savedConfig) {
+      const config = JSON.parse(savedConfig);
+      setConfigValues(config.values);
+    }
+    
+    setConfigOpen(true);
   };
   
   const getAgentBackgroundColor = (type: string) => {
@@ -208,7 +221,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="mt-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
-                  Available
+                  {agent.id === "airflow" ? "Available" : "Coming Soon"}
                 </div>
               )}
               
@@ -216,6 +229,7 @@ const Dashboard = () => {
                 variant="ghost" 
                 size="sm" 
                 className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                disabled={agent.id !== "airflow"}
               >
                 {activeAgentIds.includes(agent.id) ? "Open Chat" : "Configure"}
               </Button>

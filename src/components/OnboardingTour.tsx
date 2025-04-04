@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, ChevronRight, ChevronLeft, MessageSquare, Settings, Bell, User } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, MessageSquare, Settings, Bell, User, Wind } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNotifications } from "@/contexts/NotificationsContext";
 
@@ -20,7 +20,7 @@ const OnboardingTour = () => {
     {
       title: "Welcome to AgentHub!",
       description: "This quick tour will help you navigate the main features of our platform. You can skip this tour and revisit it later from the profile settings.",
-      icon: <Settings size={40} className="text-primary" />
+      icon: <Wind size={40} className="text-primary" />
     },
     {
       title: "Dashboard",

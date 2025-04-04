@@ -32,53 +32,54 @@ export const agentDescriptions: Record<AgentType, string> = {
   custom: "Create your own custom agent"
 };
 
-// Define the default configuration fields for each agent type
-const defaultConfigFields: ConfigField[] = [
-  {
-    id: "api_key",
-    label: "API Key",
-    type: "password",
-    required: true,
-    placeholder: "Enter your API key"
-  },
-  {
-    id: "endpoint",
-    label: "Endpoint URL",
-    type: "url",
-    required: true,
-    placeholder: "https://api.example.com"
-  }
-];
-
 // Create agents array
 export const agents: Agent[] = [
   {
     id: "airflow",
-    name: "Airflow Assistant",
+    name: "Airflow Agent",
     type: "airflow",
     description: "Manage and monitor data workflows",
     icon: Wind,
     configured: false,
     configFields: [
-      ...defaultConfigFields,
       {
-        id: "dag_folder",
-        label: "DAG Folder Path",
+        id: "url",
+        label: "Airflow URL",
+        type: "url",
+        required: true,
+        placeholder: "https://airflow.example.com"
+      },
+      {
+        id: "username",
+        label: "Username",
         type: "text",
-        required: false,
-        placeholder: "/opt/airflow/dags"
+        required: true,
+        placeholder: "Enter your username"
+      },
+      {
+        id: "password",
+        label: "Password",
+        type: "password",
+        required: true,
+        placeholder: "Enter your password"
       }
     ]
   },
   {
     id: "kubernetes",
-    name: "Kubernetes Assistant",
+    name: "Kubernetes Agent",
     type: "kubernetes",
     description: "Assist with Kubernetes operations",
     icon: Server,
     configured: false,
     configFields: [
-      ...defaultConfigFields,
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
       {
         id: "cluster_name",
         label: "Cluster Name",
@@ -90,49 +91,122 @@ export const agents: Agent[] = [
   },
   {
     id: "jenkins",
-    name: "Jenkins Assistant",
+    name: "Jenkins Agent",
     type: "jenkins",
     description: "Automate build and deployment processes",
     icon: Wrench,
     configured: false,
-    configFields: defaultConfigFields
+    configFields: [
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://api.example.com"
+      }
+    ]
   },
   {
     id: "github",
-    name: "GitHub Assistant",
+    name: "GitHub Agent",
     type: "github",
     description: "Manage code repositories and workflows",
     icon: Github,
     configured: false,
-    configFields: defaultConfigFields
+    configFields: [
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://api.example.com"
+      }
+    ]
   },
   {
     id: "langchain",
-    name: "LangChain Assistant",
+    name: "LangChain Agent",
     type: "langchain",
     description: "Process documents and chain LLM tasks",
     icon: Zap,
     configured: false,
-    configFields: defaultConfigFields
+    configFields: [
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://api.example.com"
+      }
+    ]
   },
   {
     id: "langgraph",
-    name: "LangGraph Assistant",
+    name: "LangGraph Agent",
     type: "langgraph",
     description: "Visualize and analyze language workflows",
     icon: NetworkIcon,
     configured: false,
-    configFields: defaultConfigFields
+    configFields: [
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://api.example.com"
+      }
+    ]
   },
   {
     id: "custom",
-    name: "Custom Assistant",
+    name: "Custom Agent",
     type: "custom",
     description: "Create your own custom agent",
     icon: Puzzle,
     configured: false,
     configFields: [
-      ...defaultConfigFields,
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://api.example.com"
+      },
       {
         id: "custom_params",
         label: "Custom Parameters",

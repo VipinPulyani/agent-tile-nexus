@@ -22,8 +22,20 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [agentConfig, setAgentConfig] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  
+  // Load agent configuration
+  useEffect(() => {
+    const savedConfig = localStorage.getItem(`agent_config_${user?.id}_${agentId}`);
+    if (savedConfig) {
+      setAgentConfig(JSON.parse(savedConfig));
+    } else {
+      // No config found, show message
+      toast.warning("This agent is not configured. Please configure it first.");
+    }
+  }, [agentId, user?.id]);
   
   // Initial welcome message
   useEffect(() => {
@@ -86,6 +98,12 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
     e.preventDefault();
     if (!input.trim()) return;
     
+    // Check if agent is configured
+    if (!agentConfig && agentId !== "demo") {
+      toast.error("Please configure the agent before chatting");
+      return;
+    }
+    
     // Create a temporary message ID
     const messageId = Date.now().toString();
     
@@ -118,9 +136,16 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
       if (!token || token === "demo-token") {
         // Simulate API call for demo mode
         await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // If using Airflow agent, include configuration in response
+        let responseText = `Demo response for "${input}" from the ${agentId} agent.`;
+        if (agentId === "airflow" && agentConfig) {
+          responseText = `Using Airflow at ${agentConfig.values.url} with username ${agentConfig.values.username}. Processing your request: "${input}"`;
+        }
+        
         response = {
           id: `response-${messageId}`,
-          response: `Demo response for "${input}" from the ${agentId} agent.`,
+          response: responseText,
           timestamp: new Date()
         };
       } else {
@@ -133,7 +158,8 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
           },
           body: JSON.stringify({
             message: input,
-            agent_id: agentId
+            agent_id: agentId,
+            config: agentConfig?.values // Send agent configuration to backend
           })
         });
         
@@ -178,7 +204,15 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
           </div>
           <div>
             <h3 className="font-semibold">{agentId.charAt(0).toUpperCase() + agentId.slice(1)} Agent</h3>
-            <p className="text-xs text-muted-foreground">Connected and ready to assist</p>
+            {agentConfig ? (
+              <p className="text-xs text-muted-foreground">
+                Connected to {agentConfig.values.url}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Not configured
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -232,12 +266,13 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="pr-16 py-6 bg-muted/30"
+            disabled={!agentConfig && agentId !== "demo"} 
           />
           <Button 
             type="submit" 
             size="icon" 
             className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8" 
-            disabled={isTyping || !input.trim()}
+            disabled={isTyping || !input.trim() || (!agentConfig && agentId !== "demo")}
           >
             {isTyping ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -248,6 +283,11 @@ const ChatBox = ({ agentId }: { agentId: string }) => {
         </div>
         {isTyping && (
           <p className="text-xs text-muted-foreground mt-2">Agent is typing...</p>
+        )}
+        {!agentConfig && agentId !== "demo" && (
+          <p className="text-xs text-amber-500 mt-2">
+            Please configure this agent on the dashboard before using chat
+          </p>
         )}
       </form>
     </div>

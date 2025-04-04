@@ -23,6 +23,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Get API URL from environment variable or default to localhost in development
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// Demo users for testing
+const DEMO_USERS = {
+  "demo@demo.com": {
+    id: "demo1",
+    email: "demo@demo.com",
+    name: "Demo User",
+    password: "demo",
+    isDemo: true
+  },
+  "demo1@demo.com": {
+    id: "demo2",
+    email: "demo1@demo.com",
+    name: "Demo User 1",
+    password: "demo",
+    isDemo: true
+  },
+  "demo2@demo.com": {
+    id: "demo3",
+    email: "demo2@demo.com",
+    name: "Demo User 2",
+    password: "demo",
+    isDemo: true
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const validateToken = async (token: string) => {
     try {
+      // Skip validation for demo token
+      if (token === "demo-token") return;
+      
       const response = await fetch(`${API_URL}/users/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -63,25 +91,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // For demo purposes we'll handle the hardcoded accounts
-      if ((email === "user@example.com" && password === "password") || 
-          (email === "demo@demo.com" && password === "demo")) {
+      // For demo purposes, handle the demo accounts
+      const demoUser = DEMO_USERS[email];
+      if (demoUser && demoUser.password === password) {
+        // Create a user object without the password
+        const { password, ...userData } = demoUser;
         
-        const demoUser = {
-          id: email === "demo@demo.com" ? "demo1" : "1",
-          email: email,
-          name: email === "demo@demo.com" ? "Demo User" : "Regular User",
-        };
-        
-        setUser(demoUser);
-        localStorage.setItem("user", JSON.stringify(demoUser));
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("token", "demo-token"); // Fake token
         toast.success("Login successful!");
         navigate("/");
         return;
       }
       
-      // Call the FastAPI backend
+      // Call the FastAPI backend for real users
       const response = await fetch(`${API_URL}/token`, {
         method: 'POST',
         headers: {
