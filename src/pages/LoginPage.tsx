@@ -122,9 +122,6 @@ const LoginPage = () => {
                   </>
                 ) : "Sign In"}
               </Button>
-              <p className="text-center text-sm text-muted-foreground mt-2">
-                For testing, use email: demo@demo.com / password: demo
-              </p>
             </CardFooter>
           </form>
         </Card>
