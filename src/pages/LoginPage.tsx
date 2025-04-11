@@ -38,9 +38,17 @@ const LoginPage = () => {
     
     try {
       await login(formData.email, formData.password);
+      // Login was successful if we reach this point
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Login failed. Please check your credentials.";
-      setErrorMessage(errorMsg);
+      // Check if it's an LDAP-specific error
+      if (error instanceof Error && error.message.includes("LDAP")) {
+        const errorMsg = error.message;
+        setErrorMessage(errorMsg);
+      } else {
+        // Generic error
+        const errorMsg = error instanceof Error ? error.message : "Login failed. Please check your credentials.";
+        setErrorMessage(errorMsg);
+      }
       console.error("Login failed:", error);
     } finally {
       setIsLoading(false);
@@ -63,18 +71,18 @@ const LoginPage = () => {
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Sign in to access your agent dashboard
+              Sign in with your credentials or LDAP
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Username or Email</Label>
                 <Input 
                   id="email" 
                   name="email" 
-                  type="email" 
-                  placeholder="Enter your email" 
+                  type="text" 
+                  placeholder="Enter your username or email" 
                   value={formData.email}
                   onChange={handleChange}
                   required 

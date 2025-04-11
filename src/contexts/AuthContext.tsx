@@ -104,8 +104,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate("/");
         return;
       }
+
+      // LDAP Authentication implementation
+      // This is commented out by default and will be uncommented when deployed locally
+      /*
+      try {
+        // Call LDAP authentication endpoint
+        const response = await fetch(`${API_URL}/auth/ldap`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: email,
+            password: password
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || "LDAP Authentication failed");
+        }
+        
+        if (data.authorized) {
+          // User is authorized via LDAP
+          const userData = {
+            id: data.userId || email,
+            email: email,
+            name: data.displayName || email.split('@')[0],
+          };
+          
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+          localStorage.setItem("token", data.token || "ldap-token");
+          
+          toast.success("LDAP Authentication successful!");
+          navigate("/");
+          return;
+        } else {
+          throw new Error("LDAP Authentication failed: User not authorized");
+        }
+      } catch (ldapError) {
+        console.error("LDAP Authentication error:", ldapError);
+        throw new Error("LDAP Authentication failed. Please check your credentials.");
+      }
+      */
       
-      // Call the FastAPI backend for real users
+      // Call the FastAPI backend for regular users
       const response = await fetch(`${API_URL}/token`, {
         method: 'POST',
         headers: {
