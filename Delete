@@ -1,0 +1,52 @@
+from crewai import Crew, Agent from typing import List import re
+
+--- Chunking logic ---
+
+def split_stored_procedure(proc_text: str, max_tokens: int = 1000) -> List[str]: """Split stored procedure into logical chunks based on BEGIN/END and DECLARE blocks.""" chunks = [] current_chunk = [] lines = proc_text.splitlines()
+
+for line in lines:
+    current_chunk.append(line)
+    if re.match(r'^\s*(BEGIN|END|DECLARE|CREATE TABLE|WITH|IF|ELSE|RETURN)', line, re.IGNORECASE):
+        if len("\n".join(current_chunk)) >= max_tokens:
+            chunks.append("\n".join(current_chunk))
+            current_chunk = []
+
+if current_chunk:
+    chunks.append("\n".join(current_chunk))
+
+return chunks
+
+--- Agents ---
+
+class ChunkingAgent(Agent): def run(self, stored_procedure: str) -> List[str]: print("[ChunkingAgent] Splitting stored procedure...") return split_stored_procedure(stored_procedure)
+
+class ParserAgent(Agent): def run(self, chunk: str, current_code: str) -> str: prompt = f""" You are an expert developer. Convert the following SQL stored procedure chunk into Python code. Continue the logic from the current state of the script.
+
+-- SQL Chunk: {chunk}
+
+-- Current Python Code: {current_code}
+
+Return only the additional Python code (no explanation). """ from openai import OpenAI client = OpenAI() response = client.chat.completions.create( model="gpt-4", messages=[ {"role": "system", "content": "You are a Python translator for SQL stored procedures."}, {"role": "user", "content": prompt}, ] ) return current_code + "\n" + response.choices[0].message.content.strip()
+
+--- Orchestrating the crew ---
+
+def convert_stored_procedure(proc_text: str) -> str: chunker = ChunkingAgent(name="ChunkingAgent", role="Splitter") parser = ParserAgent(name="ParserAgent", role="Code Generator")
+
+chunks = chunker.run(proc_text)
+final_code = ""
+
+for i, chunk in enumerate(chunks):
+    print(f"[Crew] Processing chunk {i + 1}/{len(chunks)}")
+    final_code = parser.run(chunk, final_code)
+
+return final_code
+
+--- Example usage ---
+
+if name == "main": with open("stored_procedure.sql", "r") as f: proc_text = f.read()
+
+python_code = convert_stored_procedure(proc_text)
+with open("converted_code.py", "w") as f:
+    f.write(python_code)
+
+print("\n✅ Python code generation complete! See 'converted_code.py'")
