@@ -1,0 +1,175 @@
+import os
+from langchain.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain.llms import OpenAI
+from langchain.chains import LLMChain
+from langgraph.graph import StateGraph, END
+from langchain_core.runnables import RunnableLambda
+
+# Set your OpenAI API key
+os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
+
+# ---------------------
+# Prompt Templates
+# ---------------------
+
+def make_chain(prompt_str):
+    prompt = PromptTemplate.from_template(prompt_str)
+    llm = OpenAI(model="gpt-4", temperature=0)
+    return LLMChain(llm=llm, prompt=prompt)
+
+prompt_inputs_outputs = """
+You are an expert SQL analyst. Extract input parameters and output columns from the following stored procedure.
+Provide:
+1. Parameter name, data type, default value (if any), and usage.
+2. Description of the final result set: columns, how they are returned, sorting, etc.
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_logic_flow = """
+Extract a step-by-step breakdown of the logic and flow in this SQL stored procedure.
+Include:
+- Initialization
+- Temp table creation with schema
+- Joins and conditions (with table.column references)
+- Filters and IF/CASE logic
+- Order of operations
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_transformations = """
+Identify all data transformations in the stored procedure:
+- NULL handling
+- String replacements
+- Data type casting
+- Mapping logic
+List the column, table, and the transformation logic.
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_db_interactions = """
+List all database operations in this procedure:
+- SELECT, INSERT, UPDATE, DELETE statements
+- Tables, columns, join conditions
+- Any views or UDF calls
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_error_handling = """
+Explain the error handling logic in this procedure:
+- TRY-CATCH blocks
+- What is logged and how
+- Whether errors are raised or swallowed
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_performance = """
+List any performance considerations in this SQL stored procedure:
+- Indexes used
+- CTE vs temp table choices
+- Optimizations, sort or filter logic
+- Batching or pagination
+
+SQL Code:
+{sql_chunk}
+"""
+
+prompt_combine_summary = """
+Assemble the following extracted sections into a clean structured Markdown document:
+- Inputs and Outputs
+- Logic and Flow
+- Transformations
+- DB Interactions
+- Error Handling
+- Performance Notes
+
+Each section must be properly titled. Keep technical accuracy.
+
+Sections:
+{sections}
+"""
+
+# ---------------------
+# LangGraph Node Logic
+# ---------------------
+
+def load_sql_file(_):
+    loader = TextLoader("stored_procedure.sql")
+    docs = loader.load()
+    return {"docs": docs}
+
+def split_sql_chunks(state):
+    docs = state["docs"]
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=100)
+    chunks = splitter.split_documents(docs)
+    return {"chunks": chunks}
+
+def make_extractor_node(prompt_str, key):
+    chain = make_chain(prompt_str)
+    def extractor(state):
+        sql = state["chunks"][0].page_content
+        result = chain.run(sql_chunk=sql)
+        return {key: result}
+    return RunnableLambda(extractor)
+
+def combine_all_sections(state):
+    sections = "\n\n---\n\n".join([
+        state.get("inputs_outputs", ""),
+        state.get("logic_flow", ""),
+        state.get("transformations", ""),
+        state.get("db_interactions", ""),
+        state.get("error_handling", ""),
+        state.get("performance_notes", ""),
+    ])
+    chain = make_chain(prompt_combine_summary)
+    summary = chain.run(sections=sections)
+    return {"final_output": summary}
+
+# ---------------------
+# Build LangGraph
+# ---------------------
+
+builder = StateGraph()
+
+builder.add_node("load_sql", RunnableLambda(load_sql_file))
+builder.add_node("split_sql", RunnableLambda(split_sql_chunks))
+builder.add_node("extract_inputs_outputs", make_extractor_node(prompt_inputs_outputs, "inputs_outputs"))
+builder.add_node("extract_logic_flow", make_extractor_node(prompt_logic_flow, "logic_flow"))
+builder.add_node("extract_transformations", make_extractor_node(prompt_transformations, "transformations"))
+builder.add_node("extract_db_interactions", make_extractor_node(prompt_db_interactions, "db_interactions"))
+builder.add_node("extract_error_handling", make_extractor_node(prompt_error_handling, "error_handling"))
+builder.add_node("extract_performance_notes", make_extractor_node(prompt_performance, "performance_notes"))
+builder.add_node("combine_summary", RunnableLambda(combine_all_sections))
+
+builder.set_entry_point("load_sql")
+builder.add_edge("load_sql", "split_sql")
+builder.add_edge("split_sql", "extract_inputs_outputs")
+builder.add_edge("extract_inputs_outputs", "extract_logic_flow")
+builder.add_edge("extract_logic_flow", "extract_transformations")
+builder.add_edge("extract_transformations", "extract_db_interactions")
+builder.add_edge("extract_db_interactions", "extract_error_handling")
+builder.add_edge("extract_error_handling", "extract_performance_notes")
+builder.add_edge("extract_performance_notes", "combine_summary")
+builder.add_edge("combine_summary", END)
+
+graph = builder.compile()
+
+# ---------------------
+# Run the graph
+# ---------------------
+
+final_state = graph.invoke({})
+
+print("\n📄 FINAL REQUIREMENTS DOCUMENT:\n")
+print(final_state["final_output"])
