@@ -1,14 +1,3 @@
-### Parameter Handling:
-- Use `?` as placeholders for parameters in SQL queries and stored procedure calls.
-- Do **not** use `@parameter_name` syntax.
-- When calling the procedure in Python, construct the `params` as a list in correct order.
-
-✅ Example:
-```python
-query = "EXEC usp_GenerateSummary ?, ?, ?"
-params = [year, status, region]
-cursor.execute(query, params)
-
 code_prompt = """You are an expert in SQL-to-Python translator.
 
 Task: Find a stored procedure related to: {sp_identifier} using embeddings. Then convert its logic to Python using context from table embeddings and DB queries.
@@ -67,17 +56,12 @@ Include all WHERE conditions from the stored procedure, respecting:
 
 ---
 
-### Logic and Flow:
-Translate the SQL logic into Python step-by-step, ensuring:
-- Filters, CASE WHEN conditions, and branching logic match exactly
-- Temporary tables or CTEs are represented using intermediate dataframes
-- Aggregations (GROUP BY, HAVING) are correctly mapped
+### SQL Parameter Handling (STRICT):
 
----
+When writing SELECT queries:
+- Use **`?`** placeholders for all input parameters.
+- Do **NOT** use `@parameter` syntax anywhere in the SQL query.
 
-### Parameter Handling (IMPORTANT):
-When writing SQL SELECT queries, always use **`?` placeholders** instead of named parameters like `@year` or `@status`.
-
-❌ Avoid:
+❌ Incorrect:
 ```sql
-SELECT * FROM tickets WHERE year = @year AND status = @status
+WHERE (@RITM IS NULL OR RITM LIKE '%' + @RITM + '%')
