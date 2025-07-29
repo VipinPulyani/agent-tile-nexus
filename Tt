@@ -1,0 +1,10 @@
+### Parameter Handling:
+- Use `?` as placeholders for parameters in SQL queries and stored procedure calls.
+- Do **not** use `@parameter_name` syntax.
+- When calling the procedure in Python, construct the `params` as a list in correct order.
+
+✅ Example:
+```python
+query = "EXEC usp_GenerateSummary ?, ?, ?"
+params = [year, status, region]
+cursor.execute(query, params)
