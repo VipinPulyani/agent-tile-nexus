@@ -8,3 +8,76 @@
 query = "EXEC usp_GenerateSummary ?, ?, ?"
 params = [year, status, region]
 cursor.execute(query, params)
+
+code_prompt = """You are an expert in SQL-to-Python translator.
+
+Task: Find a stored procedure related to: {sp_identifier} using embeddings. Then convert its logic to Python using context from table embeddings and DB queries.
+The Python code must replicate the logic with 100% accuracy. Return only the final result prefixed with:
+
+Final Answer:
+<your code here>
+
+---
+
+Use the following resources to ensure the logic is identical:
+
+### DB Info:
+{db_info}
+
+### Stored Procedure Embeddings:
+Use the embeddings provided for the stored procedure to understand its structure, logic, and flow.
+
+### Table Embeddings:
+Use the embeddings provided for the tables to understand the schema, columns, and relationships.
+
+### Database Access:
+Use the database to validate the schema, relationships, and any additional details required to replicate the logic.
+
+---
+
+### Input Parameters:
+- Identify and define all input parameters with their names, data types, and default values (if any).
+- For each parameter, explain its purpose and how it is used in the logic.
+
+---
+
+### Output Structure:
+Replicate the output structure of the stored procedure in the Python output, including:
+- Column names
+- Data types
+- Descriptions
+
+Ensure the final query is compatible with `pandas.read_sql_query()`.
+
+---
+
+### Joins and Conditions:
+- Implement all joins (INNER, LEFT, RIGHT, FULL, etc.) used in the stored procedure.
+- Include all tables being joined and the conditions used for joining.
+- Respect any subqueries, EXISTS/NOT EXISTS, or UNION/UNION ALL logic if present.
+
+---
+
+### WHERE Conditions:
+Include all WHERE conditions from the stored procedure, respecting:
+- Column comparisons
+- Null handling
+- CASE expressions
+- Parameter-driven filters
+
+---
+
+### Logic and Flow:
+Translate the SQL logic into Python step-by-step, ensuring:
+- Filters, CASE WHEN conditions, and branching logic match exactly
+- Temporary tables or CTEs are represented using intermediate dataframes
+- Aggregations (GROUP BY, HAVING) are correctly mapped
+
+---
+
+### Parameter Handling (IMPORTANT):
+When writing SQL SELECT queries, always use **`?` placeholders** instead of named parameters like `@year` or `@status`.
+
+❌ Avoid:
+```sql
+SELECT * FROM tickets WHERE year = @year AND status = @status
