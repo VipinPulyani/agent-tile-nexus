@@ -1,67 +1,47 @@
-code_prompt = """You are an expert in SQL-to-Python translator.
+import re
+import textwrap
 
-Task: Find a stored procedure related to: {sp_identifier} using embeddings. Then convert its logic to Python using context from table embeddings and DB queries.
-The Python code must replicate the logic with 100% accuracy. Return only the final result prefixed with:
+def extract_function_name(python_code: str) -> str:
+    """Extract the function name from generated code."""
+    match = re.search(r"def\s+(\w+)\s*\(", python_code)
+    return match.group(1) if match else "fetch_data"
 
-Final Answer:
-<your code here>
 
----
+def inject_dynamic_test_call(python_code: str, test_values: dict) -> str:
+    """Clean code, extract function name, and inject test call with parameters."""
+    # Clean and normalize code
+    cleaned = python_code.encode().decode("unicode_escape")
+    cleaned = textwrap.dedent(cleaned).replace("```python", "").replace("```", "").strip()
 
-Use the following resources to ensure the logic is identical:
+    # Fix unclosed docstrings
+    for quote in ['"""', "'''"]:
+        if cleaned.count(quote) % 2 != 0:
+            cleaned += f"\n{quote}"
 
-### DB Info:
-{db_info}
+    # Extract function name
+    func_name = extract_function_name(cleaned)
 
-### Stored Procedure Embeddings:
-Use the embeddings provided for the stored procedure to understand its structure, logic, and flow.
+    # Build function call with test values
+    param_str = ', '.join([f'{k}={repr(v)}' for k, v in test_values.items()])
+    call_code = f"\n\n# Injected test call\nresult = {func_name}({param_str})"
 
-### Table Embeddings:
-Use the embeddings provided for the tables to understand the schema, columns, and relationships.
+    return cleaned + call_code
 
-### Database Access:
-Use the database to validate the schema, relationships, and any additional details required to replicate the logic.
 
----
-
-### Input Parameters:
-- Identify and define all input parameters with their names, data types, and default values (if any).
-- For each parameter, explain its purpose and how it is used in the logic.
-
----
-
-### Output Structure:
-Replicate the output structure of the stored procedure in the Python output, including:
-- Column names
-- Data types
-- Descriptions
-
-Ensure the final query is compatible with `pandas.read_sql_query()`.
-
----
-
-### Joins and Conditions:
-- Implement all joins (INNER, LEFT, RIGHT, FULL, etc.) used in the stored procedure.
-- Include all tables being joined and the conditions used for joining.
-- Respect any subqueries, EXISTS/NOT EXISTS, or UNION/UNION ALL logic if present.
-
----
-
-### WHERE Conditions:
-Include all WHERE conditions from the stored procedure, respecting:
-- Column comparisons
-- Null handling
-- CASE expressions
-- Parameter-driven filters
-
----
-
-### SQL Parameter Handling (STRICT):
-
-When writing SELECT queries:
-- Use **`?`** placeholders for all input parameters.
-- Do **NOT** use `@parameter` syntax anywhere in the SQL query.
-
-❌ Incorrect:
-```sql
-WHERE (@RITM IS NULL OR RITM LIKE '%' + @RITM + '%')
+def execute_python_with_test_values(python_code: str, test_values: dict) -> dict:
+    """Execute generated code with test values and return result."""
+    try:
+        final_code = inject_dynamic_test_call(python_code, test_values)
+        local_env = {}
+        exec(final_code, {}, local_env)
+        return {
+            "success": True,
+            "result": local_env.get("result", None),
+            "executed_code": final_code
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "executed_code": final_code
+        }
