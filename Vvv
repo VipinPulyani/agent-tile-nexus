@@ -1,54 +1,27 @@
-def self_healing_python_runner(state: dict, max_retries: int = 3) -> dict:
-    """
-    Tries to run generated Python code using dummy input. If it fails,
-    it regenerates the code using the agent and retries.
-    """
-    dummy_input = {"dummy_param": 1}
-    attempt = 0
-    success = False
-    error_msg = ""
-    history = state.get("fix_history", [])
-    
-    while attempt < max_retries and not success:
-        python_code = state.get("python_code", "")
-        try:
-            # Run the code in a safe environment
-            local_env = {}
-            full_code = f"""
-{python_code}
-result = run_transformation({dummy_input})
-"""
-            exec(full_code, {}, local_env)
-            result = local_env.get("result", None)
+You are an expert Python developer and SQL analyst.
 
-            # If no exception, mark success
-            state["python_validation_success"] = True
-            state["execution_result"] = result
-            success = True
-            break
-        except Exception as e:
-            # Record failure and regenerate code
-            error_msg = str(e)
-            history.append(f"Attempt {attempt + 1}: Failed with error: {error_msg}")
-            print(f"Attempt {attempt + 1} failed: {error_msg}")
+You are provided with:
+1. Python code generated from a SQL stored procedure.
+2. A set of actual input values used in both the Python function and the stored procedure.
+3. The result returned by the stored procedure (`sql_result`).
+4. The result returned by the Python function (`python_result`).
+5. The differences between the two results (`differences`).
+6. Access to:
+   - Embeddings for the stored procedure (SP)
+   - Embeddings for the related table structures and columns
+   - SQL connection config details for database context
 
-            # 🔁 Regenerate the code using the agent
-            code_agent = initialize_agent(
-                tools=tools,
-                llm=llm,
-                agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-                memory=ReadOnlySharedMemory(memory=short_term_memory),
-                verbose=True
-            )
-            updated_prompt = code_prompt.replace("{sp_identifier}", state["input"]).replace("{db_info}", state["db_info"])
-            updated_prompt += f"\n\nNOTE: Previous error was: {error_msg}. Fix the issue in the generated Python code."
-            new_code = code_agent.run(updated_prompt)
-            state["python_code"] = new_code
-            attempt += 1
+Your job is to:
+- Analyze the differences between the stored procedure output and the Python result.
+- Use the embeddings and database context to identify the cause of the mismatch.
+- Re-examine the original logic and identify what is missing, incorrect, or misinterpreted.
+- Modify the Python code accordingly to correct the logic and regenerate the function.
+- Ensure the revised function will now return results identical to the stored procedure for the same inputs.
 
-    if not success:
-        state["python_validation_success"] = False
-        state["execution_result"] = f"Final failure after {max_retries} attempts. Last error: {error_msg}"
-    
-    state["fix_history"] = history
-    return state
+### Return the following:
+```json
+{
+  "match": false,
+  "reason": "Short explanation of what was wrong in the original code",
+  "fixed_code": "Corrected Python function string"
+}
