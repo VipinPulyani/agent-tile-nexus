@@ -1,27 +1,74 @@
-You are an expert Python developer and SQL analyst.
+import pandas as pd
+import numpy as np
 
-You are provided with:
-1. Python code generated from a SQL stored procedure.
-2. A set of actual input values used in both the Python function and the stored procedure.
-3. The result returned by the stored procedure (`sql_result`).
-4. The result returned by the Python function (`python_result`).
-5. The differences between the two results (`differences`).
-6. Access to:
-   - Embeddings for the stored procedure (SP)
-   - Embeddings for the related table structures and columns
-   - SQL connection config details for database context
+def summarize_differences_by_type(df_sp: pd.DataFrame, df_py: pd.DataFrame) -> pd.DataFrame:
+    assert df_sp.shape == df_py.shape, "Shape mismatch between SP and Python output"
+    summary = []
 
-Your job is to:
-- Analyze the differences between the stored procedure output and the Python result.
-- Use the embeddings and database context to identify the cause of the mismatch.
-- Re-examine the original logic and identify what is missing, incorrect, or misinterpreted.
-- Modify the Python code accordingly to correct the logic and regenerate the function.
-- Ensure the revised function will now return results identical to the stored procedure for the same inputs.
+    for col in df_sp.columns:
+        sp_col = df_sp[col]
+        py_col = df_py[col]
+        
+        # Determine mismatches
+        mismatches = sp_col != py_col
+        num_mismatches = mismatches.sum()
+        total = len(sp_col)
 
-### Return the following:
-```json
-{
-  "match": false,
-  "reason": "Short explanation of what was wrong in the original code",
-  "fixed_code": "Corrected Python function string"
-}
+        if num_mismatches == 0:
+            continue
+
+        dtype = sp_col.dtype
+        diff_summary = {
+            "column": col,
+            "dtype": str(dtype),
+            "total_rows": total,
+            "mismatched_rows": int(num_mismatches),
+            "mismatch_percent": round((num_mismatches / total) * 100, 2)
+        }
+
+        if pd.api.types.is_numeric_dtype(dtype):
+            diffs = (sp_col[mismatches] - py_col[mismatches]).abs()
+            diff_summary.update({
+                "mean_diff": diffs.mean(),
+                "min_diff": diffs.min(),
+                "max_diff": diffs.max(),
+                "example_sp": sp_col[mismatches].iloc[0],
+                "example_py": py_col[mismatches].iloc[0]
+            })
+
+        elif pd.api.types.is_string_dtype(dtype):
+            diff_summary.update({
+                "example_sp": sp_col[mismatches].iloc[0],
+                "example_py": py_col[mismatches].iloc[0]
+            })
+
+        elif pd.api.types.is_datetime64_any_dtype(dtype):
+            date_diffs = (sp_col[mismatches] - py_col[mismatches]).dt.days
+            diff_summary.update({
+                "min_day_diff": date_diffs.min(),
+                "max_day_diff": date_diffs.max(),
+                "example_sp": sp_col[mismatches].iloc[0],
+                "example_py": py_col[mismatches].iloc[0]
+            })
+
+        elif pd.api.types.is_bool_dtype(dtype):
+            sp_vals = sp_col[mismatches].value_counts().to_dict()
+            py_vals = py_col[mismatches].value_counts().to_dict()
+            diff_summary.update({
+                "sp_bool_counts": sp_vals,
+                "py_bool_counts": py_vals
+            })
+
+        else:
+            diff_summary.update({
+                "example_sp": str(sp_col[mismatches].iloc[0]),
+                "example_py": str(py_col[mismatches].iloc[0])
+            })
+
+        summary.append(diff_summary)
+
+    return pd.DataFrame(summary)
+
+# Example usage:
+# df_summary = summarize_differences_by_type(df_sp_output, df_py_output)
+# print(df_summary)
