@@ -81,9 +81,16 @@ const Dashboard = () => {
   const openAgentConfig = (agent: Agent) => {
     setSelectedAgent(agent);
     
-    // Check if this agent is not Airflow, and if so, show a "Coming Soon" message
-    if (agent.id !== "airflow") {
+    // Check if this agent is not Airflow or CMAC, and if so, show a "Coming Soon" message
+    if (agent.id !== "airflow" && agent.id !== "cmac") {
       toast.info(`${agent.name} is coming soon!`);
+      return;
+    }
+
+    // For CMAC agent, skip configuration and go directly to chat
+    if (agent.id === "cmac") {
+      toast.success(`${agent.name} connected successfully!`);
+      navigate(`/chat?agent=${agent.id}`);
       return;
     }
     
@@ -216,9 +223,9 @@ const Dashboard = () => {
                   Active
                 </div>
               ) : (
-                <div className="mt-2 px-3 py-1 rounded-full text-xs font-medium 
-                  {agent.id === 'airflow' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-700'}">
-                  {agent.id === "airflow" ? "Available" : "Coming Soon"}
+              <div className={cn("mt-2 px-3 py-1 rounded-full text-xs font-medium",
+                (agent.id === 'airflow' || agent.id === 'cmac') ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-700')}>
+                {(agent.id === "airflow" || agent.id === "cmac") ? "Available" : "Coming Soon"}
                 </div>
               )}
               
@@ -226,7 +233,7 @@ const Dashboard = () => {
                 variant="ghost" 
                 size="sm" 
                 className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                disabled={agent.id !== "airflow"}
+                disabled={agent.id !== "airflow" && agent.id !== "cmac"}
               >
                 {activeAgentIds.includes(agent.id) ? "Open Chat" : "Configure"}
               </Button>

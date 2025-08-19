@@ -141,29 +141,7 @@ export const agents: Agent[] = [
     description: "Cybersecurity monitoring and access control",
     icon: Shield,
     configured: false,
-    configFields: [
-      {
-        id: "api_key",
-        label: "API Key",
-        type: "password",
-        required: true,
-        placeholder: "Enter your API key"
-      },
-      {
-        id: "endpoint",
-        label: "Endpoint URL",
-        type: "url",
-        required: true,
-        placeholder: "https://cmac-api.example.com"
-      },
-      {
-        id: "organization_id",
-        label: "Organization ID",
-        type: "text",
-        required: true,
-        placeholder: "Enter your organization ID"
-      }
-    ]
+    configFields: []
   },
   {
     id: "custom",
