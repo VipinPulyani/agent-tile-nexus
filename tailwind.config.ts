@@ -66,6 +66,7 @@ export default {
 				agent: {
 					airflow: '#017cee',
 					kubernetes: '#326ce5',
+					cmac: '#22c55e',
 					default: '#6366f1',
 					langchain: '#22c55e', // Added vibrant green for LangChain
 					langgraph: '#f97316' // Added vibrant orange for LangGraph

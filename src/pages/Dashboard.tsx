@@ -19,6 +19,7 @@ const AGENT_TYPE_LABELS: Record<AgentType, string> = {
   kubernetes: "Infrastructure",
   jenkins: "CI/CD",
   github: "Version Control",
+  cmac: "Security",
   custom: "Custom"
 };
 
@@ -106,6 +107,8 @@ const Dashboard = () => {
         return "bg-orange-100 text-orange-600";
       case "github":
         return "bg-gray-100 text-gray-600";
+      case "cmac":
+        return "bg-green-100 text-green-600";
       case "custom":
         return "bg-purple-100 text-purple-600";
       default:
@@ -166,6 +169,7 @@ const Dashboard = () => {
                 <option value="kubernetes">Infrastructure</option>
                 <option value="jenkins">CI/CD</option>
                 <option value="github">Version Control</option>
+                <option value="cmac">Security</option>
                 <option value="custom">Custom</option>
               </select>
             </div>

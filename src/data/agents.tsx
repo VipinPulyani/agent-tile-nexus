@@ -1,12 +1,13 @@
 
 import { AgentType, Agent, ConfigField } from "@/types/agent";
-import { Wind, Server, Wrench, Github, Puzzle } from "lucide-react";
+import { Wind, Server, Wrench, Github, Shield, Puzzle } from "lucide-react";
 
 export const agentIcons: Record<AgentType, string> = {
   airflow: "🔄",
   kubernetes: "🚢",
   jenkins: "🔧",
   github: "🐙",
+  cmac: "🛡️",
   custom: "🧩"
 };
 
@@ -15,6 +16,7 @@ export const agentColors: Record<AgentType, string> = {
   kubernetes: "bg-gradient-to-r from-indigo-500 to-blue-500",
   jenkins: "bg-gradient-to-r from-red-500 to-pink-500",
   github: "bg-gradient-to-r from-gray-700 to-gray-900",
+  cmac: "bg-gradient-to-r from-green-500 to-teal-500",
   custom: "bg-gradient-to-r from-purple-500 to-indigo-500"
 };
 
@@ -23,6 +25,7 @@ export const agentDescriptions: Record<AgentType, string> = {
   kubernetes: "Assist with Kubernetes operations",
   jenkins: "Automate build and deployment processes",
   github: "Manage code repositories and workflows",
+  cmac: "Cybersecurity monitoring and access control",
   custom: "Create your own custom agent"
 };
 
@@ -128,6 +131,37 @@ export const agents: Agent[] = [
         type: "url",
         required: true,
         placeholder: "https://api.example.com"
+      }
+    ]
+  },
+  {
+    id: "cmac",
+    name: "CMAC Agent",
+    type: "cmac",
+    description: "Cybersecurity monitoring and access control",
+    icon: Shield,
+    configured: false,
+    configFields: [
+      {
+        id: "api_key",
+        label: "API Key",
+        type: "password",
+        required: true,
+        placeholder: "Enter your API key"
+      },
+      {
+        id: "endpoint",
+        label: "Endpoint URL",
+        type: "url",
+        required: true,
+        placeholder: "https://cmac-api.example.com"
+      },
+      {
+        id: "organization_id",
+        label: "Organization ID",
+        type: "text",
+        required: true,
+        placeholder: "Enter your organization ID"
       }
     ]
   },
