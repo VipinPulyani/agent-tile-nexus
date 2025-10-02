@@ -1,18 +1,23 @@
 You are an expert T-SQL parser.
 
-Input: A T-SQL stored procedure as plain text.
+Input:
+A T-SQL stored procedure as plain text.
 
-Task:
-- Break it into a JSON array of logical chunks **in order**.
+Goal:
+Break the procedure into a JSON array of logical chunks in the same order as the original code.
+Handle TRY/CATCH specially: represent the TRY or CATCH block itself as a parent chunk, but also create child chunks for each significant statement inside (INSERT, UPDATE, DELETE, SELECT, EXEC, RAISERROR, THROW).
 
 For each chunk include:
 - type: one of [header, set_option, parameters, declare, transaction, try, catch, cte, dml, exec, error]
-- start_line, end_line (1-based index from the original input)
-- exact SQL text
+- parent: if inside a TRY or CATCH, specify the parent chunk id (null for top level)
+- start_line, end_line (1-based line numbers from the original text)
+- sql: exact SQL text for that chunk
 
 Rules:
-- Preserve order exactly.
-- Don’t rewrite or interpret SQL.
-- Combine consecutive DECLARE statements into one block if they are contiguous.
+- Preserve the exact order of code.
+- Combine consecutive DECLARE statements into one chunk if contiguous.
+- For TRY/CATCH: create a top-level chunk (type = "try" or "catch") with its range, then child chunks for each contained statement.
+- Do not rewrite or summarize SQL text in this step.
 
-Output strict JSON array.
+Output:
+Strict JSON array where each element is a chunk object as defined above.
