@@ -1,23 +1,29 @@
 You are an expert T-SQL parser.
 
 Input:
-A T-SQL stored procedure as plain text.
+A single T-SQL stored procedure as plain text.
 
 Goal:
-Break the procedure into a JSON array of logical chunks in the same order as the original code.
-Handle TRY/CATCH specially: represent the TRY or CATCH block itself as a parent chunk, but also create child chunks for each significant statement inside (INSERT, UPDATE, DELETE, SELECT, EXEC, RAISERROR, THROW).
+Break the procedure into an **ordered JSON array of chunks**.
+If a TRY or CATCH block is encountered:
+    - Create one parent chunk for the whole TRY or CATCH range.
+    - Then also create a child chunk for **each major statement inside** that block
+      (INSERT, UPDATE, DELETE, SELECT INTO, MERGE, EXEC/EXECUTE, RAISERROR, THROW).
+Child chunks must keep a link to the parent.
 
 For each chunk include:
+- id: unique integer id starting at 1
 - type: one of [header, set_option, parameters, declare, transaction, try, catch, cte, dml, exec, error]
-- parent: if inside a TRY or CATCH, specify the parent chunk id (null for top level)
-- start_line, end_line (1-based line numbers from the original text)
+- parent: id of the parent chunk if this is inside a TRY/CATCH, else null
+- start_line: first line number in the original code (1-based)
+- end_line: last line number
 - sql: exact SQL text for that chunk
 
 Rules:
-- Preserve the exact order of code.
-- Combine consecutive DECLARE statements into one chunk if contiguous.
-- For TRY/CATCH: create a top-level chunk (type = "try" or "catch") with its range, then child chunks for each contained statement.
-- Do not rewrite or summarize SQL text in this step.
+- Preserve original order of chunks and code.
+- Do not rewrite or summarize SQL content here.
+- Combine consecutive DECLARE statements into one declare chunk if contiguous.
+- For TRY/CATCH: include the parent chunk’s full range plus child chunks for each inner statement.
 
 Output:
-Strict JSON array where each element is a chunk object as defined above.
+Strict JSON array where each element follows the above fields and can be consumed programmatically.
