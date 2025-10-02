@@ -1,29 +1,49 @@
-You are an expert T-SQL parser.
+You are an expert SQL-to-IR converter.
 
 Input:
-A single T-SQL stored procedure as plain text.
+A JSON array of chunks representing a T-SQL stored procedure. Each chunk has:
+  - id
+  - type
+  - parent
+  - start_line
+  - end_line
+  - sql
 
 Goal:
-Break the procedure into an **ordered JSON array of chunks**.
-If a TRY or CATCH block is encountered:
-    - Create one parent chunk for the whole TRY or CATCH range.
-    - Then also create a child chunk for **each major statement inside** that block
-      (INSERT, UPDATE, DELETE, SELECT INTO, MERGE, EXEC/EXECUTE, RAISERROR, THROW).
-Child chunks must keep a link to the parent.
+Produce an enriched Intermediate Representation (IR) that captures the meaning and metadata of each chunk so later steps can generate equivalent Python code.
 
-For each chunk include:
-- id: unique integer id starting at 1
-- type: one of [header, set_option, parameters, declare, transaction, try, catch, cte, dml, exec, error]
-- parent: id of the parent chunk if this is inside a TRY/CATCH, else null
-- start_line: first line number in the original code (1-based)
-- end_line: last line number
-- sql: exact SQL text for that chunk
+For each chunk:
+- Preserve: id, type, parent, start_line, end_line
+- Add:
+    summary: 1–2 sentence explanation of what this SQL does
+    tables: list of table or view names referenced (schema.table if present)
+    variables: any local variables declared or referenced
+    parameters: if the chunk is the procedure signature or a parameters block, extract each parameter as {name, datatype, default_value if any}
+    errors: if this block raises or logs errors (e.g. RAISERROR/THROW or calls to sp_LogError), note the error action
+    dependencies: if this chunk depends on variables/tables created earlier, list their names
 
-Rules:
-- Preserve original order of chunks and code.
-- Do not rewrite or summarize SQL content here.
-- Combine consecutive DECLARE statements into one declare chunk if contiguous.
-- For TRY/CATCH: include the parent chunk’s full range plus child chunks for each inner statement.
+General rules:
+- Keep chunks in original order and maintain parent–child relationships.
+- Be factual and concise; no speculation.
+- Use code to decide — e.g. scan SQL to find table names (schema.table or table), variables (prefixed with @), and parameters inside parentheses.
+- Do not reformat or rewrite SQL beyond minimal parsing to extract metadata.
 
-Output:
-Strict JSON array where each element follows the above fields and can be consumed programmatically.
+Output format:
+{
+  "procedure_name": "<detected from CREATE PROCEDURE if present>",
+  "chunks": [
+     {
+       "id": <int>,
+       "type": "...",
+       "parent": <int|null>,
+       "start_line": ...,
+       "end_line": ...,
+       "summary": "...",
+       "tables": ["Absence.Booking", "Action.Actor", "#TblActors"],
+       "variables": ["@BookingEndDate", "@UserID"],
+       "parameters": [{"name": "@BookingEndDate", "datatype": "DATETIME", "default": "NULL"}],
+       "errors": ["RAISERROR", "EXEC sp_LogError"],
+       "dependencies": ["#TblActors"]
+     }
+  ]
+}
