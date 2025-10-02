@@ -1,49 +1,260 @@
-You are an expert SQL-to-IR converter.
+=======================
+T-SQL → IR → Python Workflow Prompts
+=======================
 
-Input:
-A JSON array of chunks representing a T-SQL stored procedure. Each chunk has:
-  - id
-  - type
-  - parent
-  - start_line
-  - end_line
-  - sql
+1️⃣ CHUNKER
+-----------
+You are an expert T-SQL parser.
+
+Input: A T-SQL stored procedure as plain text.
 
 Goal:
-Produce an enriched Intermediate Representation (IR) that captures the meaning and metadata of each chunk so later steps can generate equivalent Python code.
+Break the procedure into a JSON array of logical chunks in original order.
+For TRY or CATCH:
+  - Create a parent chunk covering the whole block.
+  - Also create child chunks for each statement inside (INSERT, UPDATE, DELETE, SELECT INTO, MERGE, EXEC, RAISERROR, THROW).
 
-For each chunk:
-- Preserve: id, type, parent, start_line, end_line
-- Add:
-    summary: 1–2 sentence explanation of what this SQL does
-    tables: list of table or view names referenced (schema.table if present)
-    variables: any local variables declared or referenced
-    parameters: if the chunk is the procedure signature or a parameters block, extract each parameter as {name, datatype, default_value if any}
-    errors: if this block raises or logs errors (e.g. RAISERROR/THROW or calls to sp_LogError), note the error action
-    dependencies: if this chunk depends on variables/tables created earlier, list their names
+Each chunk must have:
+- id: sequential int
+- type: [header, set_option, parameters, declare, transaction, try, catch, cte, dml, exec, error]
+- parent: parent chunk id if inside TRY/CATCH, else null
+- start_line, end_line
+- sql: exact SQL text
 
-General rules:
-- Keep chunks in original order and maintain parent–child relationships.
-- Be factual and concise; no speculation.
-- Use code to decide — e.g. scan SQL to find table names (schema.table or table), variables (prefixed with @), and parameters inside parentheses.
-- Do not reformat or rewrite SQL beyond minimal parsing to extract metadata.
+Rules:
+- Keep original order.
+- Combine contiguous DECLAREs.
+- Do not summarize or rewrite SQL.
 
-Output format:
+Output: strict JSON array.
+
+
+2️⃣ CHUNK VALIDATOR
+-------------------
+You are a T-SQL chunk validation agent.
+
+Input: JSON array of chunks.
+
+Task:
+- Verify each chunk’s type matches its SQL.
+- Return JSON array:
+  {id, status:"ok"} or {id, status:"wrong", correct_type:"...", reason:"..."}.
+
+
+3️⃣ PARAMS EXTRACTOR
+--------------------
+You are an expert in T-SQL procedure signatures.
+
+Input: parameters chunk with CREATE PROCEDURE.
+
+Task:
+Extract: {name, datatype, default_value}
+
+Output:
 {
-  "procedure_name": "<detected from CREATE PROCEDURE if present>",
-  "chunks": [
-     {
-       "id": <int>,
-       "type": "...",
-       "parent": <int|null>,
-       "start_line": ...,
-       "end_line": ...,
-       "summary": "...",
-       "tables": ["Absence.Booking", "Action.Actor", "#TblActors"],
-       "variables": ["@BookingEndDate", "@UserID"],
-       "parameters": [{"name": "@BookingEndDate", "datatype": "DATETIME", "default": "NULL"}],
-       "errors": ["RAISERROR", "EXEC sp_LogError"],
-       "dependencies": ["#TblActors"]
-     }
-  ]
+  "id": <chunk.id>,
+  "ir": { "summary": "Procedure parameters", "parameters": [...] }
+}
+
+
+4️⃣ DECLARE / SET EXTRACTOR
+---------------------------
+You are an expert in T-SQL variable declarations.
+
+Input: DECLARE/SET chunk.
+
+Task:
+Extract: {name, datatype, initial_value}
+
+Output:
+{
+  "id": <chunk.id>,
+  "ir": { "summary": "Declares and initializes variables.", "variables": [...] }
+}
+
+
+5️⃣ DML CLASSIFIER
+------------------
+Classify a DML SQL.
+
+Input: {sql}
+
+Output:
+{"id": <chunk.id>, "kind": "select"|"select_into"|"insert"|"update"|"delete"|"merge"}
+
+
+6️⃣ SELECT ANALYZER
+-------------------
+Analyze SELECT.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary": "...",
+   "tables":[{name,alias}],
+   "columns":{"selected":[{expr,alias}]},
+   "joins":[{join_type,left,right,condition}],
+   "filters":{where,having},
+   "grouping":{group_by,order_by},
+   "dependencies":[]
+ }
+}
+
+
+7️⃣ SELECT INTO ANALYZER
+------------------------
+Analyze SELECT INTO.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary": "...",
+   "into":{"table":"#TempTable","columns":null},
+   "tables":[...],
+   "columns":{"selected":[...]},
+   "joins":[...],
+   "filters":{where,having},
+   "dependencies":["#TempTable"]
+ }
+}
+
+
+8️⃣ INSERT ANALYZER
+-------------------
+Analyze INSERT.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary": "...",
+   "target":{table,alias},
+   "columns":{"inserted":[...]},
+   "source":{
+      "type":"select"|"values",
+      "columns":[...],
+      "tables":[...],
+      "joins":[...]
+   }
+ }
+}
+
+
+9️⃣ UPDATE ANALYZER
+-------------------
+Analyze UPDATE.
+
+Output:
+{
+ "id": <chunk.id>,
+  "ir": {
+   "summary": "...",
+   "target":{table,alias},
+   "columns":{"updated":[{column,value}]},
+   "from":[{table,alias}],
+   "joins":[{join_type,left,right,condition}],
+   "filters":{where,having},
+   "dependencies":[]
+ }
+}
+
+
+🔟 DELETE ANALYZER
+------------------
+Analyze DELETE.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary": "...",
+   "target":{table,alias},
+   "joins":[...],
+   "filters":{where,having}
+ }
+}
+
+
+1️⃣1️⃣ MERGE ANALYZER
+--------------------
+Analyze MERGE.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary": "...",
+   "target": {...},
+   "source": {...},
+   "on": "condition",
+   "actions":[
+     {"when":"matched","do":"UPDATE set ..."},
+     {"when":"not matched","do":"INSERT(...) VALUES(...)"}
+   ]
+ }
+}
+
+
+1️⃣2️⃣ EXEC ANALYZER
+-------------------
+Analyze EXEC/EXECUTE.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary":"...",
+   "exec":{schema,name,args:[{name,value}]}
+ }
+}
+
+
+1️⃣3️⃣ ERROR ANALYZER
+---------------------
+Analyze RAISERROR/THROW.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary":"...",
+   "errors":[{type:"RAISERROR",message,severity,state}]
+ }
+}
+
+
+1️⃣4️⃣ CONTROL ANALYZER
+-----------------------
+Analyze TRY/CATCH/TRANSACTION.
+
+Output:
+{
+ "id": <chunk.id>,
+ "ir": {
+   "summary":"...",
+   "control": {
+      "kind":"try"|"catch"|"transaction",
+      "commit":true|false|null,
+      "rollback":true|false|null,
+      "notes":"..."
+   }
+ }
+}
+
+
+1️⃣5️⃣ IR MERGER
+---------------
+You merge IR fragments.
+
+Input: array of partial IR per chunk id.
+
+Task:
+Combine into one ordered array; merge fields without losing data.
+
+Output:
+{
+ "procedure_name":"...",
+ "chunks":[ ...merged enriched chunks... ]
 }
