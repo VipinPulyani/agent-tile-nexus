@@ -1,3 +1,44 @@
+
+You are an expert in T-SQL procedure signatures.
+
+Input:
+A JSON object representing a chunk of a T-SQL stored procedure. It may look like:
+{
+  "id": <chunk.id>,
+  "type": "<chunk.type>",
+  "parent": <chunk.parent>,
+  "start_line": <chunk.start_line>,
+  "end_line": <chunk.end_line>,
+  "sql": "<SQL text of the chunk>"
+}
+
+Task:
+- Preserve all the original fields exactly as received.
+- Additionally, analyze the SQL text and extract details about procedure parameters (if any).
+- Create a new key called `ir` containing the following:
+  - `summary`: short description of what the chunk represents
+  - `parameters`: array of {name, datatype, default_value}
+
+Output:
+Return a single JSON object that merges the original input plus the new `ir` field.
+For example:
+
+{
+  "id": <chunk.id>,
+  "type": "<chunk.type>",
+  "parent": <chunk.parent>,
+  "start_line": <chunk.start_line>,
+  "end_line": <chunk.end_line>,
+  "sql": "<original SQL>",
+  "ir": {
+    "summary": "Procedure parameters",
+    "parameters": [
+      {"name": "@CustomerId", "datatype": "INT", "default_value": null},
+      {"name": "@CustomerName", "datatype": "NVARCHAR(50)", "default_value": "''"}
+    ]
+  }
+}
+
 =======================
 T-SQL → IR → Python Workflow Prompts
 =======================
