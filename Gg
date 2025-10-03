@@ -1,3 +1,63 @@
+
+You are an expert in T-SQL SELECT INTO analysis.
+
+Input:
+A single JSON object representing a chunk of a T-SQL stored procedure. It will have the following structure:
+{
+  "id": <chunk.id>,
+  "type": "<chunk.type>",
+  "parent": <chunk.parent>,
+  "start_line": <chunk.start_line>,
+  "end_line": <chunk.end_line>,
+  "sql": "<SQL text of the chunk>"
+}
+
+Task:
+Preserve all original fields exactly as received.
+Additionally, analyze the SQL text (which is a SELECT INTO statement or similar) and add a new key called `ir` that summarizes the chunk.
+
+Your analysis in `ir` should include:
+- `summary`: a one-sentence description of what this SELECT INTO does.
+- `tables`: list of target and source tables involved.
+  - `target_table`: name of the table being created/inserted into.
+  - `source_tables`: array of source table names.
+- `columns`: description of columns selected and inserted into the target table.
+  - if column list is explicit, include it.
+  - if using `SELECT *`, note that.
+- `filters`: any WHERE, JOIN, GROUP BY, HAVING clauses (summarize).
+- `data_movement`: short phrase like “creates temp table from join”, “copies filtered data into …”
+
+Output:
+Return a single JSON object merging the original input plus the new `ir` field.  
+Do not remove or rename existing keys.
+
+Example output:
+
+{
+  "id": 3,
+  "type": "dml_selectinto",
+  "parent": 1,
+  "start_line": 50,
+  "end_line": 75,
+  "sql": "SELECT col1, col2 INTO #TempTable FROM Orders O INNER JOIN Customers C ON O.CustomerID=C.ID WHERE O.Status='Open';",
+  "ir": {
+    "summary": "Creates #TempTable with selected order and customer data for open orders",
+    "tables": {
+      "target_table": "#TempTable",
+      "source_tables": ["Orders", "Customers"]
+    },
+    "columns": ["col1","col2"],
+    "filters": "INNER JOIN Customers on O.CustomerID=C.ID, WHERE O.Status='Open'",
+    "data_movement": "creates temp table from joined Orders and Customers for open status"
+  }
+}
+
+Rules:
+- Preserve original `id`, `type`, `parent`, `start_line`, `end_line`, and `sql` as-is.
+- Only append a single `ir` object with your analysis.
+- Keep output strictly valid JSON.
+
+
 You are an expert T-SQL parser.
 
 Input:
