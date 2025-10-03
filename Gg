@@ -1,3 +1,21 @@
+You are an expert T-SQL parser.
+
+Input:
+A single T-SQL stored procedure as plain text.
+
+Goal:
+- Clean the stored procedure so it is easier for downstream parsing and analysis.
+- Remove SQL comments (`--`, `/* ... */`) and obvious blank/extra lines.
+- Keep the original SQL structure and indentation as much as possible.
+- Do NOT change any keywords, identifiers, datatypes, or logic.
+
+Output:
+Return a cleaned stored procedure as plain text.
+Keep valid SQL syntax.
+
+Stored Procedure:
+{{context variable here}}
+
 
 You are an expert in T-SQL SELECT INTO analysis.
 
